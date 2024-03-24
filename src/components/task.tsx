@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { CalendarIcon, ClockIcon } from "@radix-ui/react-icons";
 
-export default function Component() {
+export default function Task() {
   return (
     <Card>
       <CardHeader className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8 p-6">

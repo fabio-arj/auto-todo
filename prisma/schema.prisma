@@ -9,11 +9,10 @@ datasource db {
 }
 
 model User {
-  id       String    @id
-  email    String    @unique
-  name     String
-  password String
-  sessions Session[]
+  id              String    @id
+  email           String    @unique
+  hashed_password String
+  sessions        Session[]
 }
 
 model Session {
