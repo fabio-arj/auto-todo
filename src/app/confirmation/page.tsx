@@ -3,10 +3,8 @@ import {
   CardDescription,
   CardHeader,
   CardContent,
-  CardFooter,
   Card,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 
 export default function Confirmation() {
