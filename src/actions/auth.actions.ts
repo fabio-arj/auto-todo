@@ -1,20 +1,42 @@
+"use server";
+
 import { z } from "zod";
 import { SignUpSchema } from "@/app/signup/page";
 import { Argon2id } from "oslo/password";
 import { generateId } from "lucia";
-import { client as prisma }  from "@/lib/auth";
+import { lucia, client as prisma } from "@/lib/auth";
+import { cookies } from "next/headers";
 
-export function SignUp = async (values: z.infer<typeof SignUpSchema>) => {
-  console.log(values);
+export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
   const hashedPassword = await new Argon2id().hash(values.password);
-  const id = generateId(15)
+  const userId = generateId(15);
 
-  prisma.user.create({
-    data: {
-      hashed_password: hashedPassword,
-      email: values.email,
-      
-    },
-  });
+  try {
+    await prisma.user.create({
+      data: {
+        password: hashedPassword,
+        email: values.email,
+        id: userId,
+      },
+    });
 
-}
+    const session = await lucia.createSession(userId, {});
+    const sessionCookie = lucia.createSessionCookie(session.id);
+    cookies().set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes
+    );
+
+    return {
+      success: true,
+      data: {
+        userId,
+      },
+    };
+  } catch (error: any) {
+    return {
+      error: error?.message,
+    };
+  }
+};
