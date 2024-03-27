@@ -13,29 +13,35 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signUp } from "@/actions/auth.actions";
+import { signIn } from "@/actions/auth.actions";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
+import { validateRequest } from "@/lib/auth";
 
-export const SignUpSchema = z.object({
+export const SignInSchema = z.object({
   email: z.string().email(),
   password: z.string().min(4),
 });
 
-export default function AuthForm() {
+export default async function SignInPage() {
+  const { user } = await validateRequest();
+
+  if (user) {
+  }
   const router = useRouter();
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof SignUpSchema>>({
-    resolver: zodResolver(SignUpSchema),
+  const form = useForm<z.infer<typeof SignInSchema>>({
+    resolver: zodResolver(SignInSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof SignUpSchema>) {
-    const res = await signUp(values);
+  async function onSubmit(values: z.infer<typeof SignInSchema>) {
+    const res = await signIn(values);
     if (res?.error) {
+      console.log(res.error);
       toast({
         variant: "destructive",
         description: res.error,
@@ -43,7 +49,7 @@ export default function AuthForm() {
       });
     } else if (res.success) {
       toast({
-        description: "Conta criada com sucesso",
+        description: "LogIn realizado com sucesso",
       });
       router.push("/");
     }

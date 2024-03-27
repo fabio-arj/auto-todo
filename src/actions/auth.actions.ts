@@ -2,10 +2,12 @@
 
 import { z } from "zod";
 import { SignUpSchema } from "@/app/signup/page";
+import { SignInSchema } from "@/app/signin/page";
 import { Argon2id } from "oslo/password";
 import { generateId } from "lucia";
-import { lucia, client as prisma } from "@/lib/auth";
+import { lucia, client as prisma, validateRequest } from "@/lib/auth";
 import { cookies } from "next/headers";
+import { error } from "console";
 
 export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
   const hashedPassword = await new Argon2id().hash(values.password);
@@ -39,4 +41,45 @@ export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
       error: error?.message,
     };
   }
+};
+
+export const signIn = async (values: z.infer<typeof SignInSchema>) => {
+  const userExist = await prisma.user.findFirst({
+    where: { email: values.email },
+  });
+
+  if (!userExist) {
+    return {
+      error: "Usuário não encontrado",
+    };
+  }
+
+  if (!userExist.password) {
+    return {
+      error: "Usuário não encontrado",
+    };
+  }
+
+  const isValidPassword = await new Argon2id().verify(
+    userExist.password,
+    values.password
+  );
+
+  if (!isValidPassword) {
+    return {
+      error: "Usuário e/ou senha incorretos",
+    };
+  }
+
+  const session = await lucia.createSession(userExist.id, {});
+  const sessionCookie = lucia.createSessionCookie(session.id);
+  cookies().set(
+    sessionCookie.name,
+    sessionCookie.value,
+    sessionCookie.attributes
+  );
+
+  return {
+    success: "LogIn realizado com sucesso",
+  };
 };
