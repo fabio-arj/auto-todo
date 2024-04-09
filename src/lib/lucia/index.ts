@@ -1,17 +1,52 @@
 "use server";
 
 import { z } from "zod";
-import { SignUpSchema } from "@/lib/schemas";
-import { SignInSchema } from "@/lib/schemas";
 import { Argon2id } from "oslo/password";
 import { generateId } from "lucia";
 import { prisma } from "@/lib/database";
-import { lucia } from "@/lib/auth";
+import { Lucia } from "lucia";
 import { cookies } from "next/headers";
-import { TimeSpan, createDate } from "oslo";
-import { generateRandomString, alphabet } from "oslo/crypto";
+import { adapter } from "./adapter";
+import { SignInSchema, SignUpSchema } from "../schemas";
+
+const lucia = new Lucia(adapter, {
+  sessionCookie: {
+    attributes: {
+      secure: process.env.NODE_ENV === "production",
+    },
+  },
+});
+
+export const getUser = async () => {
+  const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
+  if (!sessionId) return null;
+  const { user, session } = await lucia.validateSession(sessionId);
+
+  try {
+    if (session && session.fresh) {
+      const sessionCookie = lucia.createSessionCookie(session.id);
+      cookies().set(
+        sessionCookie.name,
+        sessionCookie.value,
+        sessionCookie.attributes
+      );
+    }
+    if (!session) {
+      const sessionCookie = lucia.createBlankSessionCookie();
+      cookies().set(
+        sessionCookie.name,
+        sessionCookie.value,
+        sessionCookie.attributes
+      );
+    }
+  } catch {
+    // Next.js throws error when attempting to set cookies when rendering page
+  }
+  return user;
+};
 
 export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
+  "use server";
   const hashedPassword = await new Argon2id().hash(values.password);
   const userId = generateId(15);
 
@@ -21,15 +56,8 @@ export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
         password: hashedPassword,
         email: values.email,
         id: userId,
-        isVerified: false,
       },
     });
-
-    const verificationCode = await generateEmailVerificationCode(
-      userId,
-      values.email
-    );
-    await sendVerificationCode(values.email, verificationCode);
 
     const session = await lucia.createSession(userId, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
@@ -89,24 +117,12 @@ export const signIn = async (values: z.infer<typeof SignInSchema>) => {
   );
 
   return {
-    success: true,
+    success: "LogIn realizado com sucesso",
   };
 };
 
-export async function generateEmailVerificationCode(
-  id: string,
-  email: string
-): Promise<string> {
-  await prisma.verification.deleteMany({ where: { userId: id } });
-  const code = generateRandomString(6, alphabet("0-9"));
-  await prisma.verification.create({
-    data: {
-      id,
-      userId: id,
-      email,
-      code,
-      expiresAt: createDate(new TimeSpan(15, "m")),
-    },
-  });
-  return code;
+declare module "lucia" {
+  interface Register {
+    Lucia: typeof lucia;
+  }
 }

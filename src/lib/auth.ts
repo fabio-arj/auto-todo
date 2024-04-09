@@ -1,11 +1,7 @@
 import { Lucia } from "lucia";
-import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
-import { PrismaClient } from "@prisma/client";
 import { cookies } from "next/headers";
 import { cache } from "react";
-
-export const client = new PrismaClient();
-export const adapter = new PrismaAdapter(client.session, client.user);
+import { adapter } from "./lucia/adapter";
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {

@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,49 +15,44 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signUp } from "@/actions/auth.actions";
 import { useToast } from "@/components/ui/use-toast";
+import { SignInSchema } from "@/lib/schemas";
+import { signIn } from "@/lib/lucia";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export const SignUpSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(4),
-});
-
-export default function AuthForm() {
+export default function SigninForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof SignUpSchema>>({
-    resolver: zodResolver(SignUpSchema),
+  const form = useForm<z.infer<typeof SignInSchema>>({
+    resolver: zodResolver(SignInSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof SignUpSchema>) {
-    const res = await signUp(values);
-    if (res?.error) {
-      toast({
-        variant: "destructive",
-        description: res.error,
-        duration: 3000,
+  const onSubmit = form.handleSubmit(
+    async (values: z.infer<typeof SignInSchema>) => {
+      signIn(values).then((res) => {
+        if (res?.error) {
+          console.log(res.error);
+          toast({
+            variant: "destructive",
+            description: res.error,
+            duration: 3000,
+          });
+        } else if (res.success) {
+          router.push("/");
+        }
       });
-    } else if (res.success) {
-      toast({
-        description: "Conta criada com sucesso",
-      });
-      router.push("/");
     }
-  }
+  );
 
   return (
     <div className="flex h-screen justify-center items-center">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-8 w-1/4"
-        >
+        <form onSubmit={onSubmit} className="space-y-5 w-1/4">
           <FormField
             control={form.control}
             name="email"
@@ -82,7 +79,18 @@ export default function AuthForm() {
               </FormItem>
             )}
           />
-          <Button type="submit">Submit</Button>
+          <Button type="submit" className="w-full">
+            Entrar
+          </Button>
+          <Button type="submit" variant={"secondary"} className="w-full">
+            Entrar com Google
+          </Button>
+          <p className="w-full text-sm text-center">
+            Não possui uma conta ? {""}
+            <Link href="/sign-up" className="underline">
+              Criar conta
+            </Link>
+          </p>
         </form>
       </Form>
     </div>

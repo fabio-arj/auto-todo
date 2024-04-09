@@ -1,8 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,35 +10,28 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signIn } from "@/actions/auth.actions";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { useToast } from "@/components/ui/use-toast";
+import { SignUpSchema } from "@/lib/schemas";
 import { useRouter } from "next/navigation";
-import { validateRequest } from "@/lib/auth";
+import { signUp } from "@/lib/lucia";
 
-export const SignInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(4),
-});
-
-export default async function SignInPage() {
-  const { user } = await validateRequest();
-
-  if (user) {
-  }
+export default function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof SignInSchema>>({
-    resolver: zodResolver(SignInSchema),
+  const form = useForm<z.infer<typeof SignUpSchema>>({
+    resolver: zodResolver(SignUpSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof SignInSchema>) {
-    const res = await signIn(values);
+  async function onSubmit(values: z.infer<typeof SignUpSchema>) {
+    const res = await signUp(values);
     if (res?.error) {
-      console.log(res.error);
       toast({
         variant: "destructive",
         description: res.error,
@@ -49,18 +39,17 @@ export default async function SignInPage() {
       });
     } else if (res.success) {
       toast({
-        description: "LogIn realizado com sucesso",
+        description: "Conta criada com sucesso",
       });
       router.push("/");
     }
   }
-
   return (
     <div className="flex h-screen justify-center items-center">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-8 w-1/4"
+          className="space-y-5 w-1/4"
         >
           <FormField
             control={form.control}
@@ -88,7 +77,9 @@ export default async function SignInPage() {
               </FormItem>
             )}
           />
-          <Button type="submit">Submit</Button>
+          <Button type="submit" className="w-full">
+            Criar conta
+          </Button>
         </form>
       </Form>
     </div>

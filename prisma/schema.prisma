@@ -3,15 +3,17 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id       String    @id
-  email    String?   @unique
-  password String?
-  sessions Session[]
+  id         String    @id
+  email      String    @unique
+  password   String
+  sessions   Session[]
+  isVerified Boolean   @default(false)
 }
 
 model Session {
@@ -19,4 +21,12 @@ model Session {
   userId    String
   expiresAt DateTime
   user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+}
+
+model Verification {
+  id        Int      @id @default(autoincrement())
+  code      String
+  userId    String
+  email     String
+  expiresAt DateTime
 }
