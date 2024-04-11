@@ -30,6 +30,7 @@ export default function SignupForm() {
   });
 
   async function onSubmit(values: z.infer<typeof SignUpSchema>) {
+    console.log("SingUp");
     const res = await signUp(values);
     if (res?.error) {
       toast({

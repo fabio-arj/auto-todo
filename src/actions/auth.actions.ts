@@ -8,8 +8,8 @@ import { generateId } from "lucia";
 import { prisma } from "@/lib/database";
 import { lucia } from "@/lib/auth";
 import { cookies } from "next/headers";
-import { TimeSpan, createDate } from "oslo";
-import { generateRandomString, alphabet } from "oslo/crypto";
+import { sendVerificationCode } from "@/lib/email";
+import { generateEmailVerificationCode } from "./verification.actions";
 
 export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
   const hashedPassword = await new Argon2id().hash(values.password);
@@ -29,6 +29,7 @@ export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
       userId,
       values.email
     );
+
     await sendVerificationCode(values.email, verificationCode);
 
     const session = await lucia.createSession(userId, {});
@@ -92,21 +93,3 @@ export const signIn = async (values: z.infer<typeof SignInSchema>) => {
     success: true,
   };
 };
-
-export async function generateEmailVerificationCode(
-  id: string,
-  email: string
-): Promise<string> {
-  await prisma.verification.deleteMany({ where: { userId: id } });
-  const code = generateRandomString(6, alphabet("0-9"));
-  await prisma.verification.create({
-    data: {
-      id,
-      userId: id,
-      email,
-      code,
-      expiresAt: createDate(new TimeSpan(15, "m")),
-    },
-  });
-  return code;
-}
