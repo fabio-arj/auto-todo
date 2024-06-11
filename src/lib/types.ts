@@ -1,5 +1,4 @@
-export type User = {
+export type Task = {
+  description: string;
   id: string;
-  email: String;
-  password: String;
 };

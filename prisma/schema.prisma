@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -14,6 +13,7 @@ model User {
   password   String
   sessions   Session[]
   isVerified Boolean   @default(false)
+  tasks      Task[]
 }
 
 model Session {
@@ -29,4 +29,12 @@ model Verification {
   userId    String
   email     String
   expiresAt DateTime
+}
+
+model Task {
+  description String
+  id          String   @id
+  createdAt   DateTime @default(now())
+  user        User     @relation(references: [id], fields: [userId])
+  userId      String
 }

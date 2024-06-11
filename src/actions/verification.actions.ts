@@ -1,3 +1,5 @@
+"use server";
+
 import { TimeSpan, createDate } from "oslo";
 import { generateRandomString, alphabet } from "oslo/crypto";
 import { prisma } from "@/lib/database";

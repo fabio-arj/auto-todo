@@ -6,7 +6,7 @@ import { SignInSchema } from "@/lib/schemas";
 import { Argon2id } from "oslo/password";
 import { generateId } from "lucia";
 import { prisma } from "@/lib/database";
-import { lucia } from "@/lib/auth";
+import { lucia } from "@/lib/lucia/adapter";
 import { cookies } from "next/headers";
 import { sendVerificationCode } from "@/lib/email";
 import { generateEmailVerificationCode } from "./verification.actions";

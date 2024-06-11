@@ -19,24 +19,38 @@ import {
   StarIcon,
 } from "@radix-ui/react-icons";
 import { Checkbox } from "@/components/ui/checkbox";
-import Task from "@/components/Task";
+import TaskCard from "@/components/TaskCard";
+import { Dialog, DialogTrigger, DialogContent } from "./ui/dialog";
+import TaskForm from "./TaskForm";
+import { getTasks } from "@/actions/task.actions";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const tasks = await getTasks();
+
   return (
     <div className="flex min-h-screen w-full items-start bg-background">
       <div className="hidden border-r border-border dark:border-border lg:block w-[300px] h-screen">
         <div className="flex h-full flex-col gap-2">
-          <div className="flex h-14 items-center border-b border-border px-6 dark:border-border">
-            <ListBulletIcon />
-            <h1 className="ml-2 text-lg font-semibold">Tasks</h1>
-            <Button
-              className="ml-auto rounded-full w-8 h-8 border border-border dark:border-border"
-              size="icon"
-              variant="ghost"
-            >
-              <PlusIcon />
-              <span className="sr-only">Add task</span>
-            </Button>
+          <div className="flex h-14 items-center  justify-between border-b border-border px-6 dark:border-border">
+            <div className="flex items-center">
+              <ListBulletIcon />
+              <h1 className="ml-2 text-lg font-semibold">Tasks</h1>
+            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  className="ml-auto rounded-full w-7 h-7 border border-border dark:border-border"
+                  size="icon"
+                  variant="ghost"
+                >
+                  <PlusIcon />
+                  <span className="sr-only">Add task</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <TaskForm></TaskForm>
+              </DialogContent>
+            </Dialog>
           </div>
           <div className="flex-1 overflow-auto p-2">
             <ul className="grid gap-2 text-sm">
@@ -110,7 +124,11 @@ export default function DashboardPage() {
           </DropdownMenu>
         </header>
         <main className="flex-1 flex flex-col p-4 md:p-6 gap-4">
-          <Task></Task>
+          {tasks.tasks?.map((task) => {
+            return (
+              <TaskCard description={task.description} id={task.id}></TaskCard>
+            );
+          })}
         </main>
       </div>
     </div>

@@ -4,18 +4,9 @@ import { z } from "zod";
 import { Argon2id } from "oslo/password";
 import { generateId } from "lucia";
 import { prisma } from "@/lib/database";
-import { Lucia } from "lucia";
 import { cookies } from "next/headers";
-import { adapter } from "./adapter";
+import { lucia } from "./adapter";
 import { SignInSchema, SignUpSchema } from "../schemas";
-
-const lucia = new Lucia(adapter, {
-  sessionCookie: {
-    attributes: {
-      secure: process.env.NODE_ENV === "production",
-    },
-  },
-});
 
 export const getUser = async () => {
   const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
@@ -81,6 +72,7 @@ export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
 };
 
 export const signIn = async (values: z.infer<typeof SignInSchema>) => {
+  "use server";
   const userExist = await prisma.user.findFirst({
     where: { email: values.email },
   });
